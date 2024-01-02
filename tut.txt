@@ -22,3 +22,6 @@ Folders:
         4. models:
         5. routes:
         6. utils:
+
+
+We use Prettier to format the documents
