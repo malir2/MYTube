@@ -17,11 +17,36 @@ Files:
 
 Folders:
         1. Controllers:
+
         2. db:
+            => database.js
+
         3. middlewares:
+
         4. models:
+
         5. routes:
+
         6. utils:
 
 
 We use Prettier to format the documents
+
+
+                            "Connect Database"
+
+To connect database we will use following steps:
+
+1.  Make database in "Mongodb Atlas".
+2.  Copy Url of database.
+3.  Paste this URL in .env.
+4.  Set the name of database in constant.js.
+5.  Than go back to the "database.js" and import "mongoose".
+6.  Than import database name from constant.js.
+7.  After that make a fuction to connect to the database and make it async function.
+8.  Use "try/catch" method to make connection.
+9.  Than export it as default.
+10. Import it in "index.js".
+11. Install and import "dotenv" in index.js so all environment variables start as soon as our app starts.
+12. Due to import method we have to config dotenv and make changes in dev in package.json.
+13. After that our database connects successfully.
