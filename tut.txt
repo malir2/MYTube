@@ -1,0 +1,24 @@
+--Tuesday 1/2/2024
+
+It is the first full stack project in which I am going to make website like youtube.
+
+First I make a complete professional folder structure.
+
+1. npm init 
+2. public folder
+3. src folder (index.js, constant.js, app.js)
+4. push in git
+
+                        "src Folder Structer"
+Files:
+    1. index.js
+    2. constant.js
+    3. app.js
+
+Folders:
+        1. Controllers:
+        2. db:
+        3. middlewares:
+        4. models:
+        5. routes:
+        6. utils:
