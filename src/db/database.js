@@ -11,7 +11,9 @@ const database_Conection = async () => {
       `Database is connected successfull: ${database_Connection_Process.connection.host}`
     );
   } catch (error) {
-    console.log(`${error}: Fail to connect to the database!`);
+    console.log(
+      `${error}: Fail to connect to the database! ${process.env.DATABASE_URL}`
+    );
   }
 };
 
