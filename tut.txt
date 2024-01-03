@@ -50,3 +50,28 @@ To connect database we will use following steps:
 11. Install and import "dotenv" in index.js so all environment variables start as soon as our app starts.
 12. Due to import method we have to config dotenv and make changes in dev in package.json.
 13. After that our database connects successfully.
+
+                            "Custom API response and error handling"
+
+Now, we will make an express app and add middlewaresand configurations to it.
+
+1.  In "app.js" import express.
+2.  Make express.
+3.  We will install two packages "cookie-parser" and "cors". Cookie-parser is used to handle cookies from the user and cors is used for Cross-Origin Resource Sharing.
+4.  To use middlewares and configurations we will use "app.use()".
+5.  First we will use cors for resourse sharing. It contain some options in object.
+6.  Than we will use url encoded feature and json to set the comming data size.
+7.  Use "express.static" in case if we want to stor something on our server.
+8.  After that we will use cookie-parser.
+9.  To listen our app on server we will import it in index.js and run if database connects successfully.
+
+Now, we are going to make utilities so that we can use them when we need.
+
+=> In utils folder we will make these files:
+
+1. asyncHandler : It is made to for database because everytime we will connect with data base so we make it to make our work easier.
+                    than we will make the in it.
+
+(Note: To make our api respone amd failure standarized we will make utilities)
+2. apiResponse : We make this file to send response from api.
+3. apiError: We make this file to handle error section.
