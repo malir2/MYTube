@@ -43,7 +43,7 @@ To connect database we will use following steps:
 4.  Set the name of database in constant.js.
 5.  Than go back to the "database.js" and import "mongoose".
 6.  Than import database name from constant.js.
-7.  After that make a fuction to connect to the database and make it async function.
+7.  After that make a function to connect to the database and make it async function.
 8.  Use "try/catch" method to make connection.
 9.  Than export it as default.
 10. Import it in "index.js".
@@ -53,15 +53,15 @@ To connect database we will use following steps:
 
                             "Custom API response and error handling"
 
-Now, we will make an express app and add middlewaresand configurations to it.
+Now, we will make an express app and add middlewares and configurations to it.
 
 1.  In "app.js" import express.
-2.  Make express.
+2.  Make an express app.
 3.  We will install two packages "cookie-parser" and "cors". Cookie-parser is used to handle cookies from the user and cors is used for Cross-Origin Resource Sharing.
 4.  To use middlewares and configurations we will use "app.use()".
-5.  First we will use cors for resourse sharing. It contain some options in object.
+5.  First we will use cors for resourse sharing. It contains some options in object.
 6.  Than we will use url encoded feature and json to set the comming data size.
-7.  Use "express.static" in case if we want to stor something on our server.
+7.  Use "express.static" in case if we want to store something on our server.
 8.  After that we will use cookie-parser.
 9.  To listen our app on server we will import it in index.js and run if database connects successfully.
 
@@ -69,9 +69,17 @@ Now, we are going to make utilities so that we can use them when we need.
 
 => In utils folder we will make these files:
 
-1. asyncHandler : It is made to for database because everytime we will connect with data base so we make it to make our work easier.
+1. asyncHandler : It is made for database because everytime we will connect with database so we make it to make our work easier.
                     than we will make the in it.
 
 (Note: To make our api respone amd failure standarized we will make utilities)
 2. apiResponse : We make this file to send response from api.
 3. apiError: We make this file to handle error section.
+
+                                "Models"
+
+Now, We will make models for mongodb.
+
+                                "Database Operations"
+
+To perform database advance Operations we will use "mongodb-aggregate-paginate-v2"

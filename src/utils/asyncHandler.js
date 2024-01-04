@@ -1,4 +1,4 @@
-// By using "Promis method"
+// By using "Promise method"
 
 // const asyncHandler = (requestHandler) => {
 //   (req, res, next) => {
