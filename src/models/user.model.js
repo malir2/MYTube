@@ -1,4 +1,6 @@
 import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcrypt";
+import Jwt from "jsonwebtoken";
 
 const userSchema = new Schema(
   {
@@ -44,5 +46,48 @@ const userSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// We will encrypt password in this function
+// There are some hooks in mongoose help to perform operation (pre = "before save" )
+userSchema.pre("save", async function (next) {
+  // There is a prblem if we make this function that bcrypt change password everytime when we will change any thing. That's why we will do it in condtion (if/else)
+  if (this.isModified("password")) {
+    return await (this.password = bcrypt.hash(this.password, 10));
+  } else {
+    return next();
+  }
+});
+
+// Now we have to check password for login. So, bcrypt provide the facility to perform this task
+userSchema.methods.isPasswordCorrect = async function (password) {
+  // It takes the password and compare it with the database password
+  return await (bcrypt.compare(password), this.password);
+};
+
+userSchema.methods.generateAccessToken = function () {
+  return Jwt.sign(
+    {
+      _id: this._id,
+      email: this.email,
+      firstName: this.firstName,
+      lastName: this.lastName,
+    },
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: process.env.ACCESS_TOKEN_EXPIRE,
+    }
+  );
+};
+userSchema.methods.generateRefreshToken = function () {
+  return Jwt.sign(
+    {
+      _id: this._id,
+    },
+    process.env.REFRESH_TOKEN_SECRET,
+    {
+      expiresIn: process.env.REFRESH_TOKEN_EXPIRE,
+    }
+  );
+};
 
 export const User = mongoose.model("User", userSchema);

@@ -82,4 +82,13 @@ Now, We will make models for mongodb.
 
                                 "Database Operations"
 
-To perform database advance Operations we will use "mongodb-aggregate-paginate-v2"
+To perform database advance Operations we will use "mongodb-aggregate-paginate-v2".
+
+It allows us to add middlewares and plugins in our schema.
+
+
+                                "Password and Token"
+
+To make our password secure we will use "bcrypt" and than import in desire file.
+
+To make Token we will use "JWT".
