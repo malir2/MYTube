@@ -5,9 +5,10 @@ import cors from "cors";
 const app = express();
 
 app.use(cookieParser());
+app.use(express.static("../public"));
 app.use(cors());
-app.use(express.json({ limit: "20kb" }));
-app.use(urlencoded({ extended: "true", limit: "20kb" }));
+app.use(express.json({ limit: "200mb" }));
+app.use(urlencoded({ extended: "true", limit: "200mb" }));
 
 // Import router
 import router from "./routes/user.routes.js";

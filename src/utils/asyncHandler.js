@@ -10,9 +10,9 @@
 
 // By using try/catch method
 const asyncHandler = (requestHandler) => {
-  return async (req, res, next) => {
+  return (req, res, next) => {
     try {
-      await requestHandler(req, res, next);
+      requestHandler(req, res, next);
     } catch (err) {
       console.log(err);
     }

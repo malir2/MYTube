@@ -34,6 +34,9 @@ const userSchema = new Schema(
     avatar: {
       type: String, // Cloudinary
     },
+    coverImage: {
+      type: String, // Cloudinary
+    },
     watchHistory: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -51,11 +54,10 @@ const userSchema = new Schema(
 // There are some hooks in mongoose help to perform operation (pre = "before save" )
 userSchema.pre("save", async function (next) {
   // There is a prblem if we make this function that bcrypt change password everytime when we will change any thing. That's why we will do it in condtion (if/else)
-  if (this.isModified("password")) {
-    return await (this.password = bcrypt.hash(this.password, 10));
-  } else {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
+
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
 // Now we have to check password for login. So, bcrypt provide the facility to perform this task
