@@ -75,4 +75,99 @@ const userRegister = asyncHandler(async (req, res) => {
   );
 });
 
-export default userRegister;
+// Now we will make user login controller
+
+// Features and points:
+
+// username or email from user
+// Check email or username exist
+// Match password
+// Generate access token and refresh token
+// Make secure cookies
+
+const loginUser = asyncHandler(async (req, res) => {
+  // First we will take username , email and password from body
+  const { username, email, password } = req.body;
+
+  if (!username && !email) {
+    throw new apiError(404, "Email or username is required!");
+  }
+
+  // Now, we will check for username and email
+  const checkUser = User.findOne({
+    $or: [{ username }, { email }],
+  });
+
+  // If username or email does not match then we will throw error
+  if (!checkUser) {
+    throw new apiError(404, "User doesn't exist!");
+  }
+
+  // Now we will check for password for that we will use bcrypt "isPasswordCorrect" method which we made in user model
+
+  const checkPassword = await checkUser.isPasswordCorrect(password);
+
+  // If password is not correct then we will throw an error
+  if (!checkPassword) {
+    throw new apiError(404, "Incorrect password!");
+  }
+
+  // If everything is correct so now we have to generate access token and refresh token. To use them, We will make a method to make our task easier
+
+  // We need user id to generate token
+  const generateAccessTokenAndRefreshToken = async (userId) => {
+    try {
+      // First we will find the user by its id
+      const user = await User.findById(userId);
+
+      const accessToken = userId.generateAccessToken();
+      const refreshToken = userId.generateRefreshToken();
+
+      // To save refreshToken we will asign it to the user
+      user.refeshToken = refreshToken;
+
+      // Now we will save the user. Here, I write "validityBeforeSave: false" so, it don't make any change during save
+      user.save({ validityBeforeSave: false });
+      return { accessToken, refreshToken };
+    } catch (error) {
+      throw new apiError(500, "Something went wrong!");
+    }
+  };
+  // Now we are ready to generate accessToken and refreshToken
+  // Here we distructure the function
+  const { accessToken, refreshToken } =
+    await generateAccessTokenAndRefreshToken(checkUser._id);
+
+  // To remove user password and refreshToken we will do this
+  const loggedInUser = await User.findById(checkUser._id).select(
+    "-password -refreshToken"
+  );
+
+  // Use for cookie to add some features
+  const option = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  // All process is completed and we are ready to return response
+  return (
+    res
+      .status(200)
+      // To send cookie we use ".cookie"
+      .cookie("accessToken", accessToken, option)
+      .cookie("refreshToken", refreshToken, option)
+      .json(
+        new apiResponse(
+          200,
+          {
+            user: loggedInUser,
+            accessToken,
+            refreshToken,
+          },
+          "You are logged in succcessfully!"
+        )
+      )
+  );
+});
+
+export { userRegister };
