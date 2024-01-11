@@ -170,4 +170,21 @@ const loginUser = asyncHandler(async (req, res) => {
   );
 });
 
-export { userRegister };
+const logOutUser = asyncHandler(async (req, res) => {
+  // Here we will use findbyIdAndUpdate to find the user and update it directly
+  // Now we can access the user because of middleware we use in user.routes
+  await User.findByIdAndUpdate(req.user._id, {
+    $set: {
+      refreshToken: undefined,
+    },
+  });
+
+  const option = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  res.status(200).cookie("accessToken", option).cookie("refreshToken", option);
+});
+
+export { userRegister, loginUser, logOutUser };
