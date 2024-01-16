@@ -61,9 +61,9 @@ userSchema.pre("save", async function (next) {
 });
 
 // Now we have to check password for login. So, bcrypt provide the facility to perform this task
-userSchema.methods.isPasswordCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (enterPassword) {
   // It takes the password and compare it with the database password
-  return await (bcrypt.compare(password), this.password);
+  return await bcrypt.compare(enterPassword, this.password);
 };
 
 userSchema.methods.generateAccessToken = function () {
@@ -76,7 +76,7 @@ userSchema.methods.generateAccessToken = function () {
     },
     process.env.ACCESS_TOKEN_SECRET,
     {
-      expiresIn: process.env.ACCESS_TOKEN_EXPIRE,
+      expiresIn: 3600,
     }
   );
 };
@@ -87,9 +87,8 @@ userSchema.methods.generateRefreshToken = function () {
     },
     process.env.REFRESH_TOKEN_SECRET,
     {
-      expiresIn: process.env.REFRESH_TOKEN_EXPIRE,
+      expiresIn: 3600,
     }
   );
 };
-
 export const User = mongoose.model("User", userSchema);

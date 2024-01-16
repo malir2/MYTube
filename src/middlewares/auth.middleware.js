@@ -4,31 +4,30 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 
 // Here we will use next because it is middleware and after completion of the desire task. It will pass the controll to the next
-const authentication = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, _, next) => {
   try {
-    // First we will get token it may be come from cookies or header
     const token =
       req.cookies?.accessToken ||
       req.header("Authorization")?.replace("Bearer ", "");
 
+    // console.log(token);
     if (!token) {
       throw new apiError(401, "Unauthorized request");
     }
 
-    // Now we wil decide the token for this we will verify function of jwt which take token and access token
-    const decode = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
-    // Now we after decode we will find the user by it id. The id can be used because we send it to the token in our "user.model.js".
-    const user = User.findById(decode?._id).select("-password -refreshToken");
+    const user = await User.findById(decodedToken?._id).select(
+      "-password -refreshToken"
+    );
 
     if (!user) {
-      throw new apiError(404, "There is no access token!");
+      throw new apiError(401, "Invalid Access Token");
     }
 
     req.user = user;
+    next();
   } catch (error) {
-    throw new apiError(404, "Something went wrong!");
+    throw new apiError(401, error?.message || "Invalid access token");
   }
 });
-
-export default authentication;

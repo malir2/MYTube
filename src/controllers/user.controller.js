@@ -4,6 +4,35 @@ import { User } from "../models/user.model.js";
 import apiResponse from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 
+// We need user id to generate token
+const generateAccessAndRefreshTokens = async function (userId) {
+  try {
+    // By user id we will find it
+    const user = await User.findById(userId);
+
+    if (!user) {
+      throw new apiError(404, "User not found");
+    }
+
+    // now we will store access and refresh token in variables. We made a method for thi in user model
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // We will save refresh token by this method
+    user.refreshToken = refreshToken;
+    // Then we will save it
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    console.error("Error generating tokens:", error.message, error.stack);
+
+    throw new apiError(
+      500,
+      "Something went wrong while generating refresh and access tokens"
+    );
+  }
+};
 const userRegister = asyncHandler(async (req, res) => {
   //   res.json({ message: "Hello" });
   // Now we are going to make a proper controller for user registration
@@ -86,60 +115,43 @@ const userRegister = asyncHandler(async (req, res) => {
 // Make secure cookies
 
 const loginUser = asyncHandler(async (req, res) => {
-  // First we will take username , email and password from body
-  const { username, email, password } = req.body;
+  // First we will take username, email and password
+  const { email, username, password } = req.body;
+  console.log(email);
 
+  // Username and email are optional one is required but if both are missing then this error will occurs
   if (!username && !email) {
-    throw new apiError(404, "Email or username is required!");
+    throw new apiError(400, "username or email is required");
   }
 
-  // Now, we will check for username and email
-  const checkUser = User.findOne({
+  // Now we will find user from database through email or username
+  const user = await User.findOne({
     $or: [{ username }, { email }],
   });
 
-  // If username or email does not match then we will throw error
-  if (!checkUser) {
-    throw new apiError(404, "User doesn't exist!");
+  // If username or email doesnot match then this error will occurs
+  if (!user) {
+    throw new apiError(404, "User does not exist");
   }
 
-  // Now we will check for password for that we will use bcrypt "isPasswordCorrect" method which we made in user model
+  // Now, we will check password. We made a method in user model now we will use that method
+  const isPasswordValid = await user.isPasswordCorrect(password);
 
-  const checkPassword = await checkUser.isPasswordCorrect(password);
-
-  // If password is not correct then we will throw an error
-  if (!checkPassword) {
-    throw new apiError(404, "Incorrect password!");
+  // If password is wrong then this method will be used
+  if (!isPasswordValid) {
+    throw new apiError(401, "Invalid user credentials");
   }
 
-  // If everything is correct so now we have to generate access token and refresh token. To use them, We will make a method to make our task easier
+  // If everything is correct so now we have to generate access token and refresh token. To use them, We will make a method to make our task easier which is on the top of the program
 
-  // We need user id to generate token
-  const generateAccessTokenAndRefreshToken = async (userId) => {
-    try {
-      // First we will find the user by its id
-      const user = await User.findById(userId);
-
-      const accessToken = userId.generateAccessToken();
-      const refreshToken = userId.generateRefreshToken();
-
-      // To save refreshToken we will asign it to the user
-      user.refeshToken = refreshToken;
-
-      // Now we will save the user. Here, I write "validityBeforeSave: false" so, it don't make any change during save
-      user.save({ validityBeforeSave: false });
-      return { accessToken, refreshToken };
-    } catch (error) {
-      throw new apiError(500, "Something went wrong!");
-    }
-  };
   // Now we are ready to generate accessToken and refreshToken
   // Here we distructure the function
-  const { accessToken, refreshToken } =
-    await generateAccessTokenAndRefreshToken(checkUser._id);
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    user._id
+  );
 
   // To remove user password and refreshToken we will do this
-  const loggedInUser = await User.findById(checkUser._id).select(
+  const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
 
@@ -173,18 +185,28 @@ const loginUser = asyncHandler(async (req, res) => {
 const logOutUser = asyncHandler(async (req, res) => {
   // Here we will use findbyIdAndUpdate to find the user and update it directly
   // Now we can access the user because of middleware we use in user.routes
-  await User.findByIdAndUpdate(req.user._id, {
-    $set: {
-      refreshToken: undefined,
+  await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $unset: {
+        refreshToken: 1, // this removes the field from document
+      },
     },
-  });
+    {
+      new: true,
+    }
+  );
 
-  const option = {
+  const options = {
     httpOnly: true,
     secure: true,
   };
 
-  res.status(200).cookie("accessToken", option).cookie("refreshToken", option);
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new apiResponse(200, {}, "User logged Out"));
 });
 
 export { userRegister, loginUser, logOutUser };
