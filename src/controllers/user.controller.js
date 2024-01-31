@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import apiResponse from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
+import Jwt, { decode } from "jsonwebtoken";
 
 // We need user id to generate token
 const generateAccessAndRefreshTokens = async function (userId) {
@@ -209,4 +210,51 @@ const logOutUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, {}, "User logged Out"));
 });
 
-export { userRegister, loginUser, logOutUser };
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  try {
+    // We have to take refresh token first from cookies or body
+    const incomingToken = req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingToken) {
+      throw new apiError(404, "Unauthorized Request!");
+    }
+
+    // After getting token we have to verify it
+    const decodeToken = Jwt.verify(
+      incomingToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
+
+    if (!decodeToken) {
+      throw new apiError(404, "Invalid Refresh Token");
+    }
+
+    // Now we have to find the user with this token
+    const user = await User.findById(decodeToken._id);
+
+    // Now we have to match incoming token with refresh token
+    if (incomingToken !== user?.refreshToken) {
+      throw new apiError(404, "Invalid Request!");
+    }
+
+    // Store the token in access and refresh token
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user._id
+    );
+
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+
+    res
+      .status(200)
+      .cookies("accessToken", accessToken, options)
+      .cookies("refreshToken", refreshToken, options)
+      .json(new apiResponse({ accessToken, refreshToken }, 200));
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+export { userRegister, loginUser, logOutUser, refreshAccessToken };

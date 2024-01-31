@@ -43,7 +43,7 @@ const userSchema = new Schema(
         ref: "Videos",
       },
     ],
-    token: {
+    refreshToken: {
       type: String,
     },
   },
