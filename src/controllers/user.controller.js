@@ -257,4 +257,111 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { userRegister, loginUser, logOutUser, refreshAccessToken };
+// Update password
+// Update details
+// Update profile pictures
+// Get User
+
+const changePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword, confirmPassword } = req.body;
+
+  if (!oldPassword) {
+    throw new apiError(404, "Old password is required!");
+  }
+
+  const checkOldPassword = await req.user.isPasswordCorrect(oldPassword);
+
+  if (!checkOldPassword) {
+    throw new apiError(404, "Password does not match!");
+  }
+
+  if (newPassword !== confirmPassword) {
+    throw new apiError(
+      404,
+      "New password is not matching with confirm password!"
+    );
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { newPassword },
+    },
+    { new: true }
+  ).select("-password");
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, user, "Password is changed successfully!"));
+});
+
+const changeProfileInfo = asyncHandler(async (req, res) => {
+  const { fullName, lastName } = req.body;
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { fullName, lastName },
+    },
+    { new: true }
+  );
+
+  res
+    .status(200)
+    .json(new apiResponse(200, user, "Info changed successfully!"));
+});
+
+const changeProfileImage = asyncHandler(async (req, res) => {
+  const newAvatarLocalPath = req.files?.path;
+
+  const avatar = await uploadOnCloudinary(newAvatarLocalPath);
+  if (!newAvatarLocalPath) {
+    throw new apiError(404, "Avatar Image is not provided!");
+  }
+
+  const user = await User.findById(req.user._id).select("-password");
+  user.avatar = avatar.url;
+  user.save({ validateBeforeSave: false });
+
+  res
+    .status(200)
+    .json(new apiResponse(200, "Avatar Image Update successfully!"), user);
+});
+
+const updateCoverImage = asyncHandler(async (req, res) => {
+  const newCoverImageLocalPath = req.files?.path;
+  if (!newCoverImageLocalPath) {
+    throw new apiError(404, "Cover Image is not provided!");
+  }
+
+  const coverImage = await uploadOnCloudinary(newCoverImageLocalPath);
+
+  const user = await User.findById(req.user._id).select("-password");
+
+  user.coverImage = coverImage.url;
+  user.save({ validateBeforeSave: false });
+
+  res
+    .status(200)
+    .json(new apiResponse(200, "CoverImage is updated successfully!", user));
+});
+
+const getUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  res
+    .status(200)
+    .json(new apiResponse(200, user, "User fetched successfully!"));
+});
+
+export {
+  userRegister,
+  loginUser,
+  logOutUser,
+  refreshAccessToken,
+  changePassword,
+  changeProfileImage,
+  updateCoverImage,
+  changeProfileInfo,
+  getUser,
+};
