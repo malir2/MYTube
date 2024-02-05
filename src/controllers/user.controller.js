@@ -354,6 +354,73 @@ const getUser = asyncHandler(async (req, res) => {
     .json(new apiResponse(200, user, "User fetched successfully!"));
 });
 
+const getChannelsDetails = asyncHandler(async (req, res) => {
+  // We are using req.params here to take username from url
+  const { username } = req.params;
+
+  if (!username) {
+    throw new apiError(404, "User is not found!");
+  }
+
+  //Here we are going to write aggreigation piplen of mongodb to get all details about channel
+  const channel = await User.aggregate([
+    {
+      // First we will find user match it
+      $match: {
+        username,
+      },
+    },
+    {
+      // Now we will set that from where we want to take all details and about which field
+      $lookup: {
+        // From which model
+        from: "subscribes",
+        // Localfield to specify the field
+        localField: "_id",
+        // About which field
+        foreignField: "subscriber",
+        as: "subscribers",
+      },
+      $lookup: {
+        from: "subscribes",
+        localField: "_id",
+        foreignField: "subscribed",
+        as: "subscribed",
+      },
+    },
+    {
+      // Here we are going to add additional fields
+      $addFields: {
+        // Length of subscribers
+        subscriberCount: {
+          $size: "subscribers",
+        },
+        // Length of subscribed channels
+        sunscribedChannelCount: {
+          $size: "subscribed",
+        },
+        // Check is user subscribe the channel or not
+        isChannelSubscribed: {
+          // Here we will make a condition
+          $cond: {
+            if: { $in: [req.user._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+  ]);
+
+  if (!channel) {
+    throw new apiError(404, "There is no channel");
+  }
+  console.log(channel);
+  res
+    .status(200)
+    .json(new apiResponse(200, channel[0], "Channel fetched successfully!"));
+});
+
 export {
   userRegister,
   loginUser,
@@ -364,4 +431,5 @@ export {
   updateCoverImage,
   changeProfileInfo,
   getUser,
+  getChannelsDetails,
 };
