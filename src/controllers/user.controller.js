@@ -396,7 +396,7 @@ const getChannelsDetails = asyncHandler(async (req, res) => {
           $size: "subscribers",
         },
         // Length of subscribed channels
-        sunscribedChannelCount: {
+        subscribedChannelCount: {
           $size: "subscribed",
         },
         // Check is user subscribe the channel or not
@@ -408,6 +408,16 @@ const getChannelsDetails = asyncHandler(async (req, res) => {
             else: false,
           },
         },
+      },
+    },
+    {
+      $project: {
+        firstName: 1,
+        lastName: 1,
+        avatar: 1,
+        subscriberCount: 1,
+        subscribedChannelCount: 1,
+        isChannelSubscribed: 1,
       },
     },
   ]);
