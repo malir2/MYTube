@@ -44,7 +44,7 @@ router
   .route("/change-profile-coverImage")
   .patch(verifyJWT, upload.single("coverImage"), updateCoverImage);
 
-router.route("/user-info").get(getUser);
+router.route("/user-info").patch(verifyJWT, getUser);
 
 router.route("/c:/username").get(verifyJWT, getChannelsDetails);
 
