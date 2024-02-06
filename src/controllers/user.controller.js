@@ -250,8 +250,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
     return res
       .status(200)
-      .cookies("accessToken", accessToken, options)
-      .cookies("refreshToken", refreshToken, options)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(new apiResponse({ accessToken, refreshToken }, 200));
   } catch (error) {
     console.log(error);
@@ -270,7 +270,9 @@ const changePassword = asyncHandler(async (req, res) => {
     throw new apiError(404, "Old password is required!");
   }
 
-  const checkOldPassword = await req.user.isPasswordCorrect(oldPassword);
+  const user = await User.findById(req.user._id);
+
+  const checkOldPassword = await user.isPasswordCorrect(oldPassword);
 
   if (!checkOldPassword) {
     throw new apiError(404, "Password does not match!");
@@ -283,13 +285,8 @@ const changePassword = asyncHandler(async (req, res) => {
     );
   }
 
-  const user = await User.findByIdAndUpdate(
-    req.user._id,
-    {
-      $set: { newPassword },
-    },
-    { new: true }
-  ).select("-password");
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
 
   return res
     .status(200)
@@ -297,12 +294,12 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const changeProfileInfo = asyncHandler(async (req, res) => {
-  const { fullName, lastName } = req.body;
+  const { firstName, lastName } = req.body;
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: { fullName, lastName },
+      $set: { firstName: firstName, lastName: lastName },
     },
     { new: true }
   );
@@ -313,7 +310,7 @@ const changeProfileInfo = asyncHandler(async (req, res) => {
 });
 
 const changeProfileImage = asyncHandler(async (req, res) => {
-  const newAvatarLocalPath = req.files?.path;
+  const newAvatarLocalPath = req.file?.path;
 
   const avatar = await uploadOnCloudinary(newAvatarLocalPath);
   if (!newAvatarLocalPath) {
@@ -326,11 +323,11 @@ const changeProfileImage = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json(new apiResponse(200, "Avatar Image Update successfully!"), user);
+    .json(new apiResponse(200, "Avatar Image Update successfully!", user));
 });
 
 const updateCoverImage = asyncHandler(async (req, res) => {
-  const newCoverImageLocalPath = req.files?.path;
+  const newCoverImageLocalPath = req.file?.path;
   if (!newCoverImageLocalPath) {
     throw new apiError(404, "Cover Image is not provided!");
   }
@@ -394,11 +391,11 @@ const getChannelsDetails = asyncHandler(async (req, res) => {
       $addFields: {
         // Length of subscribers
         subscriberCount: {
-          $size: "subscribers",
+          $size: "$subscribers",
         },
         // Length of subscribed channels
         subscribedChannelCount: {
-          $size: "subscribed",
+          $size: "$subscribed",
         },
         // Check is user subscribe the channel or not
         isChannelSubscribed: {
@@ -435,7 +432,7 @@ const getChannelsDetails = asyncHandler(async (req, res) => {
 const watchHistory = asyncHandler(async (req, res) => {
   const user = await User.aggregate([
     {
-      $match: new mongoose.Types.ObjectId(req.user._id),
+      $match: { _id: req.user._id },
     },
     {
       $lookup: {
@@ -478,8 +475,8 @@ const watchHistory = asyncHandler(async (req, res) => {
     .json(
       new apiResponse(
         200,
-        "Watched history fetched successfully!",
-        user.watchHistory
+        user[0].watchHistory,
+        "Watched history fetched successfully!"
       )
     );
 });

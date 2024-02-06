@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   changePassword,
   changeProfileImage,
+  changeProfileInfo,
   getChannelsDetails,
   getUser,
   logOutUser,
@@ -34,7 +35,7 @@ router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/change-password").post(verifyJWT, changePassword);
 
-router.route("/change-profile-info").post(verifyJWT, changeProfileImage);
+router.route("/change-profile-info").post(verifyJWT, changeProfileInfo);
 
 router
   .route("/change-profile-image")
@@ -46,7 +47,7 @@ router
 
 router.route("/user-info").patch(verifyJWT, getUser);
 
-router.route("/c:/username").get(verifyJWT, getChannelsDetails);
+router.route("/c/:username").get(verifyJWT, getChannelsDetails);
 
 router.route("/watch-history").get(verifyJWT, watchHistory);
 
