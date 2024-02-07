@@ -3,8 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import apiResponse from "../utils/ApiResponse.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
-import Jwt, { decode } from "jsonwebtoken";
-import mongoose from "mongoose";
+import Jwt from "jsonwebtoken";
 
 // We need user id to generate token
 const generateAccessAndRefreshTokens = async function (userId) {
@@ -360,7 +359,7 @@ const getChannelsDetails = asyncHandler(async (req, res) => {
     throw new apiError(404, "User is not found!");
   }
 
-  //Here we are going to write aggreigation piplen of mongodb to get all details about channel
+  //Here we are going to write aggreigation pipeline of mongodb to get all details about channel
   const channel = await User.aggregate([
     {
       // First we will find user match it
